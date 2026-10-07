@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How It Works | ScholarScout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 glass-panel shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="/" class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                        S
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">ScholarScout</span>
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">← Back to Finder</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+        <div class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">Behind the Scenes</h1>
+            <p class="text-slate-500 text-lg max-w-2xl mx-auto">Built for THINK BEYOND 2026. A transparent look at our architecture, matching engine, and privacy-first approach.</p>
+        </div>
+
+        <div class="space-y-8">
+            
+            <!-- Section 1: The Problem & Solution -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <span class="bg-blue-100 text-blue-600 rounded-lg p-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </span>
+                    The Core Philosophy
+                </h2>
+                <p class="text-slate-600 leading-relaxed mb-4">
+                    Millions of students miss out on government schemes because the information is scattered, wrapped in bureaucratic jargon, and locked behind mandatory accounts. <strong>ScholarScout</strong> reverses this model. We ask simple questions, run them against a centralized database, and deliver plain-language, actionable results in milliseconds.
+                </p>
+            </div>
+
+            <!-- Section 2: Architecture -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Tech Stack</h3>
+                    <ul class="space-y-3 text-slate-600">
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span><strong>Frontend:</strong> HTML5, Vanilla JavaScript, and Tailwind CSS for a responsive, lightweight UI without heavy frameworks.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span><strong>Matching engine:</strong> Plain JavaScript that runs in the browser against a structured rule file (schemes.json), so your answers never leave your device.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span><strong>Hosting:</strong> Azure Static Web Apps (free tier) with automatic deployment from GitHub.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Section 3: Privacy -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Zero-Data Privacy</h3>
+                    <p class="text-slate-600 leading-relaxed mb-4">
+                        We believe eligibility checks should not cost you your personal data. 
+                    </p>
+                    <ul class="space-y-3 text-slate-600">
+                        <li class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-slate-400 rounded-full"></div>
+                            No login walls or mandatory account creation.
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-slate-400 rounded-full"></div>
+                            No phone numbers, emails, or Aadhaar required.
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-slate-400 rounded-full"></div>
+                            Your answers are processed in your browser and never sent to a server.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 4: Matching Logic & Flowchart -->
+            <div class="bg-slate-900 rounded-2xl shadow-sm border border-slate-800 p-8 text-white">
+                <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                    <span class="bg-slate-800 rounded-lg p-2">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    </span>
+                    The Matching Engine
+                </h2>
+                <p class="text-slate-300 leading-relaxed mb-8">
+                    Our backend iterates through the standardized <code>schemes.json</code> database. We use a count-based logic gate to determine if a student perfectly qualifies, or if they are one step away from a major financial grant.
+                </p>
+
+                <!-- Tailwind Flowchart -->
+                <div class="flex flex-col items-center bg-slate-950/50 p-6 rounded-xl border border-slate-800">
+                    
+                    <!-- Step 1 -->
+                    <div class="bg-slate-800 border border-slate-600 px-6 py-3 rounded-lg shadow-lg text-center w-full max-w-sm">
+                        <span class="text-xs font-bold text-blue-400 uppercase tracking-wider block mb-1">Step 1</span>
+                        <span class="font-mono text-sm text-slate-200">Read the profile from the form</span>
+                    </div>
+
+                    <!-- Arrow Down -->
+                    <div class="text-slate-600 my-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-slate-800 border border-slate-600 px-6 py-3 rounded-lg shadow-lg text-center w-full max-w-sm">
+                        <span class="text-xs font-bold text-blue-400 uppercase tracking-wider block mb-1">Step 2: Hard Filter</span>
+                        <span class="font-mono text-sm text-slate-200">Check Domicile State Boundary</span>
+                        <div class="text-xs text-slate-400 mt-1">(If mismatch → Immediately Discard)</div>
+                    </div>
+
+                    <!-- Arrow Down -->
+                    <div class="text-slate-600 my-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-slate-800 border border-slate-600 px-6 py-3 rounded-lg shadow-lg text-center w-full max-w-sm">
+                        <span class="text-xs font-bold text-blue-400 uppercase tracking-wider block mb-1">Step 3: Evaluate Rules</span>
+                        <span class="font-mono text-sm text-slate-200">Test Age, Education, Category, Income, Gender</span>
+                        <div class="text-xs text-slate-400 mt-1">Increment <code>failedEligibility</code> count per failure</div>
+                    </div>
+
+                    <!-- Arrow Down (Branching point) -->
+                    <div class="text-slate-600 mt-2 mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    </div>
+
+                    <!-- Step 4 Branches -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-center">
+                        <!-- Branch A -->
+                        <div class="bg-green-900/40 border border-green-700/50 px-4 py-4 rounded-lg flex flex-col items-center justify-center">
+                            <span class="font-mono text-lg font-bold text-green-400 mb-1">0 Failures</span>
+                            <span class="text-sm text-green-200">✅ Exact Match Array</span>
+                        </div>
+                        <!-- Branch B -->
+                        <div class="bg-amber-900/40 border border-amber-700/50 px-4 py-4 rounded-lg flex flex-col items-center justify-center relative">
+                            <!-- Highlight badge for innovation -->
+                            <div class="absolute -top-3 bg-amber-500 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Key Feature</div>
+                            
+                            <span class="font-mono text-lg font-bold text-amber-400 mb-1">1 Failure</span>
+                            <span class="text-sm text-amber-200">⚠️ Near Miss Array</span>
+                            <span class="text-xs text-amber-400/70 mt-1">(Extract & show exact missing rule)</span>
+                        </div>
+                        <!-- Branch C -->
+                        <div class="bg-red-900/40 border border-red-700/50 px-4 py-4 rounded-lg flex flex-col items-center justify-center">
+                            <span class="font-mono text-lg font-bold text-red-400 mb-1">2+ Failures</span>
+                            <span class="text-sm text-red-200">❌ Discard Scheme</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+</body>
+</html>

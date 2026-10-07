@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScholarScout | Scholarship Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 glass-panel shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="/" class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">S</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">ScholarScout</span>
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="how-it-works.html" class="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">How It Works</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">Find your eligible scholarships</h1>
+            <p class="text-slate-500 text-lg max-w-2xl mx-auto">Answer quick questions to discover government schemes you qualify for. We don't store your personal data.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- Left Column: Form -->
+            <div class="lg:col-span-5">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 sticky top-24">
+                    <form id="profile-form" class="space-y-5" novalidate>
+
+                        <!-- Age & Income -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="age" class="block text-sm font-semibold text-slate-700 mb-1">Age</label>
+                                <input type="number" id="age" name="age" required
+                                    class="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="e.g. 18">
+                                <p id="errorAge" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label for="family_income" class="block text-sm font-semibold text-slate-700 mb-1">Family Income (₹/yr)</label>
+                                <input type="number" id="family_income" name="family_income" required
+                                    class="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="e.g. 150000">
+                                <p id="errorIncome" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                        </div>
+
+                        <!-- Domicile State -->
+                        <div class="relative">
+                            <label for="domicile_state" class="block text-sm font-semibold text-slate-700 mb-1">State of Domicile (Home State)</label>
+                            <input type="text" id="domicile_state" name="domicile_state" required autocomplete="off"
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                placeholder="Where is your permanent residence?">
+                            <div id="domicile_suggestions" class="absolute z-30 w-full border border-slate-200 rounded-xl bg-white mt-1 hidden shadow-xl max-h-48 overflow-y-auto"></div>
+                            <p id="errorDomicile" class="text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+
+                        <!-- College State -->
+                        <div class="relative">
+                            <label for="college_state" class="block text-sm font-semibold text-slate-700 mb-1">State of College (Campus Location)</label>
+                            <input type="text" id="college_state" name="college_state" required autocomplete="off"
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                placeholder="Where do you study?">
+                            <div id="college_suggestions" class="absolute z-30 w-full border border-slate-200 rounded-xl bg-white mt-1 hidden shadow-xl max-h-48 overflow-y-auto"></div>
+                            <p id="errorCollege" class="text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+
+                        <!-- Education Level -->
+                        <div>
+                            <label for="education_level" class="block text-sm font-semibold text-slate-700 mb-1">Education Level</label>
+                            <select id="education_level" name="education_level"
+                                class="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none transition-all">
+                                <option value="Class 10">Class 10</option>
+                                <option value="Class 11">Class 11</option>
+                                <option value="Class 12">Class 12</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="Undergraduate" selected>Undergraduate (Degree)</option>
+                                <option value="Postgraduate">Postgraduate</option>
+                            </select>
+                        </div>
+
+                        <!-- Category & Gender -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="category" class="block text-sm font-semibold text-slate-700 mb-1">Category</label>
+                                <select id="category" name="category"
+                                    class="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none transition-all">
+                                    <option value="General">General</option>
+                                    <option value="OBC">OBC</option>
+                                    <option value="SC">SC</option>
+                                    <option value="ST">ST</option>
+                                    <option value="EWS">EWS</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="gender" class="block text-sm font-semibold text-slate-700 mb-1">Gender</label>
+                                <select id="gender" name="gender"
+                                    class="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none transition-all">
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <p id="formError" class="text-red-500 text-sm hidden text-center"></p>
+
+                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex justify-center items-center gap-2">
+                            <span>Find Schemes</span>
+                            <svg class="w-5 h-5 hidden animate-spin" id="spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Results -->
+            <div class="lg:col-span-7">
+
+                <!-- Empty State -->
+                <div id="initialState" class="h-full flex flex-col items-center justify-center text-center p-8 bg-slate-50/50 border border-slate-200 border-dashed rounded-2xl min-h-[400px]">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-900 mb-1">No searches yet</h3>
+                    <p class="text-slate-500 max-w-sm">Fill out your details on the left and hit "Find Schemes" to see your eligible government aid.</p>
+                </div>
+
+                <!-- Results -->
+                <div id="resultsContainer" class="hidden space-y-8">
+
+                    <!-- Mandana's take (shown only when a prepared answer exists) -->
+                    <div id="mandanaPanel" class="hidden rounded-2xl border border-indigo-200 bg-indigo-50 p-6">
+                        <h2 class="text-xl font-bold text-indigo-900 mb-1">Mandana's take: which one should you prioritise?</h2>
+                        <p id="mandanaMeta" class="text-xs text-indigo-700 mb-4"></p>
+                        <div class="space-y-3 text-sm text-slate-800">
+                            <p><strong class="text-indigo-900">Lean.</strong> <span id="mandanaLean"></span></p>
+                            <p><strong class="text-indigo-900">Tension.</strong> <span id="mandanaTension"></span></p>
+                            <p><strong class="text-indigo-900">Take.</strong> <span id="mandanaTake"></span></p>
+                            <p><strong class="text-indigo-900">Think about:</strong> <span id="mandanaAsk"></span></p>
+                        </div>
+                        <p class="mt-3 text-sm"><strong class="text-indigo-900">Confidence:</strong>
+                            <span id="mandanaConfidence" class="inline-block text-xs font-semibold bg-white border border-indigo-200 rounded-full px-2 py-1"></span>
+                        </p>
+                        <p class="text-xs text-slate-500 mt-3">You can usually hold only one of these at a time. Always confirm the rules in the official guidelines before applying.</p>
+                    </div>
+
+                    <!-- Exact Matches -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <h2 class="text-2xl font-bold text-slate-900">You Qualify</h2>
+                            <span id="matchCount" class="bg-green-100 text-green-700 text-sm font-bold px-2.5 py-0.5 rounded-full">0</span>
+                        </div>
+                        <div id="matchesBox" class="space-y-4"></div>
+                        <div id="noMatchesMsg" class="hidden p-6 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-500">
+                            No exact matches found for your profile.
+                        </div>
+                    </div>
+
+                    <!-- Near Misses -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <h2 class="text-2xl font-bold text-slate-900">Almost There (Near Misses)</h2>
+                            <span id="nearCount" class="bg-amber-100 text-amber-700 text-sm font-bold px-2.5 py-0.5 rounded-full">0</span>
+                        </div>
+                        <div id="nearBox" class="space-y-4"></div>
+                        <div id="noNearMsg" class="hidden p-6 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-500">
+                            No close matches found.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 py-6 px-4">
+        Always confirm the rules on the official portal before applying. ScholarScout is an independent guide and is not affiliated with any government portal.
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
