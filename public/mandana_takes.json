@@ -1,0 +1,62 @@
+{
+  "aicte-pragati-degree+pm-usp-csss": {
+    "ready": false,
+    "generated_on": "",
+    "profile_note": "female undergraduate, family income up to Rs 4.5 lakh, not SC (OBC only above Rs 2.5 lakh)",
+    "lean": "",
+    "tension": "",
+    "take": "",
+    "ask": "",
+    "confidence": ""
+  },
+  "aicte-pragati-degree+pm-usp-csss+top-class-sc": {
+    "ready": false,
+    "generated_on": "",
+    "profile_note": "SC female undergraduate, family income up to Rs 4.5 lakh",
+    "lean": "",
+    "tension": "",
+    "take": "",
+    "ask": "",
+    "confidence": ""
+  },
+  "pm-usp-csss+top-class-sc": {
+    "ready": false,
+    "generated_on": "",
+    "profile_note": "SC student (male undergraduate or postgraduate, or female postgraduate), family income up to Rs 4.5 lakh",
+    "lean": "",
+    "tension": "",
+    "take": "",
+    "ask": "",
+    "confidence": ""
+  },
+  "aicte-pragati-degree+top-class-sc": {
+    "ready": false,
+    "generated_on": "",
+    "profile_note": "SC female undergraduate, family income between Rs 4.5 lakh and Rs 8 lakh",
+    "lean": "",
+    "tension": "",
+    "take": "",
+    "ask": "",
+    "confidence": ""
+  },
+  "aicte-pragati-degree+pm-usp-csss+pm-yasasvi-college": {
+    "ready": false,
+    "generated_on": "",
+    "profile_note": "OBC female undergraduate, family income up to Rs 2.5 lakh",
+    "lean": "",
+    "tension": "",
+    "take": "",
+    "ask": "",
+    "confidence": ""
+  },
+  "pm-usp-csss+pm-yasasvi-college": {
+    "ready": false,
+    "generated_on": "",
+    "profile_note": "OBC student (male undergraduate or postgraduate, or female postgraduate), family income up to Rs 2.5 lakh",
+    "lean": "",
+    "tension": "",
+    "take": "",
+    "ask": "",
+    "confidence": ""
+  }
+}
