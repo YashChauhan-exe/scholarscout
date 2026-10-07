@@ -296,8 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------- Mandana's take (pre-generated) ----------
     function renderMandana(matches) {
         setVisible(mandanaPanel, false);
-        if (!mandanaPanel || matches.length < 2) return;
-        const key = matches.map((m) => m.id).sort().join('+');
+        // Look up by central schemes only, so one entry works for every state
+        const central = matches.filter((m) => m.level === 'central');
+        if (!mandanaPanel || central.length < 2) return;
+        const key = central.map((m) => m.id).sort().join('+');
         const t = mandanaTakes[key];
         if (!t || t.ready !== true) return;
         $('mandanaMeta').textContent = 'Pre-generated with Mandana AI (KriyagniAI) on ' + (t.generated_on || '') + ' for: ' + (t.profile_note || '');
