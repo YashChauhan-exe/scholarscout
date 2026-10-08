@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const { t, label } = I18N;
     const $ = (id) => document.getElementById(id);
     const form = $('profile-form');
 
@@ -23,83 +24,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const mandanaPanel = $('mandanaPanel');
 
     let statesList = [];
-    let mandanaTakes = {};
     let schemesList = [];
+    let schemesHi = {};
+    let mandanaTakes = {};
+    let lastResult = null; // { matches, near }
 
+    const isHi = () => I18N.getLang() === 'hi';
+
+    // ---------- Data ----------
     fetch('/schemes.json')
         .then((res) => res.json())
         .then((data) => { schemesList = data; })
         .catch((err) => console.error('Failed to load schemes:', err));
 
-    // ---------- Matching engine (runs in the browser) ----------
-    const norm = (v) => String(v ?? '').trim().toLowerCase();
-    const allows = (rule, value) => {
-        if (rule === undefined || rule === null) return true;
-        if (typeof rule === 'string') return norm(rule) === 'all' || norm(rule) === norm(value);
-        if (Array.isArray(rule)) return rule.some((r) => norm(r) === 'all' || norm(r) === norm(value));
-        return true;
-    };
-    const listText = (rule) => (Array.isArray(rule) ? rule.join(', ') : String(rule));
-
-    function matchSchemes(profile) {
-        const matches = [];
-        const near_misses = [];
-
-        schemesList.forEach((scheme) => {
-            const e = scheme.eligibility || {};
-
-            // Hard filters: the student can't change these
-            if (!allows(e.states, profile.domicile_state)) return;
-            if (!allows(e.college_states, profile.college_state)) return;
-
-            let failed = 0;
-            let missing = '';
-
-            if ((e.min_age != null && profile.age < e.min_age) || (e.max_age != null && profile.age > e.max_age)) {
-                failed++;
-                missing = `Age must be between ${e.min_age ?? 'any'} and ${e.max_age ?? 'any'}.`;
-            }
-            if (!allows(e.education_levels, profile.education_level)) {
-                failed++;
-                missing = `Requires education level: ${listText(e.education_levels)}.`;
-            }
-            if (!allows(e.categories, profile.category)) {
-                failed++;
-                missing = `Reserved for category: ${listText(e.categories)}.`;
-            }
-            if (e.max_family_income != null && profile.family_income > e.max_family_income) {
-                failed++;
-                missing = `Family income must be ₹${Number(e.max_family_income).toLocaleString('en-IN')} per year or less.`;
-            }
-            if (!allows(e.genders, profile.gender)) {
-                failed++;
-                missing = `Eligible for: ${listText(e.genders)} applicants only.`;
-            }
-
-            if (failed === 0) matches.push(scheme);
-            else if (failed === 1) near_misses.push({ scheme, missing });
-        });
-
-        return { matches, near_misses };
-    }
+    fetch('/schemes_hi.json')
+        .then((res) => (res.ok ? res.json() : {}))
+        .then((data) => { schemesHi = data; })
+        .catch(() => {});
 
     fetch('/states.json')
         .then((res) => res.json())
         .then((data) => { statesList = data; })
         .catch((err) => console.error('Failed to load states:', err));
 
-    // Optional pre-generated Mandana answers (file lives in the public folder)
     fetch('/mandana_takes.json')
         .then((res) => (res.ok ? res.json() : {}))
         .then((data) => { mandanaTakes = data; })
         .catch(() => {});
 
+    // Hindi text for a scheme field, falling back to English
+    const sx = (scheme, field) => {
+        const tr = isHi() && schemesHi[scheme.id];
+        return (tr && tr[field]) || scheme[field];
+    };
+
+    // ---------- Helpers ----------
     const setVisible = (el, on) => {
         if (!el) return;
         el.classList.toggle('hidden', !on);
     };
 
-    const escapeHtml = (t) => String(t ?? '').replace(/[&<>"']/g, (c) =>
+    const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     function setFieldError(input, errorElId, msg) {
@@ -115,43 +80,120 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ---------- State autocomplete ----------
+    const fmtDate = (iso) => {
+        const d = new Date(iso + 'T00:00:00Z');
+        if (isNaN(d)) return iso;
+        return d.toLocaleDateString(isHi() ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    };
+
+    // ---------- Matching engine (runs in the browser) ----------
+    const norm = (v) => String(v ?? '').trim().toLowerCase();
+    const allows = (rule, value) => {
+        if (rule === undefined || rule === null) return true;
+        if (typeof rule === 'string') return norm(rule) === 'all' || norm(rule) === norm(value);
+        if (Array.isArray(rule)) return rule.some((r) => norm(r) === 'all' || norm(r) === norm(value));
+        return true;
+    };
+    const listLabels = (rule, kind) => (Array.isArray(rule) ? rule : [rule]).map((v) => label(kind, v)).join(', ');
+
+    function matchSchemes(profile) {
+        const matches = [];
+        const near = [];
+
+        schemesList.forEach((scheme) => {
+            const e = scheme.eligibility || {};
+
+            // Hard filters: the student can't change these
+            if (!allows(e.states, profile.domicile_state)) return;
+            if (!allows(e.college_states, profile.college_state)) return;
+
+            const missing = [];
+            if ((e.min_age != null && profile.age < e.min_age) || (e.max_age != null && profile.age > e.max_age)) {
+                missing.push({ type: 'age', min: e.min_age, max: e.max_age });
+            }
+            if (!allows(e.education_levels, profile.education_level)) {
+                missing.push({ type: 'education', rule: e.education_levels });
+            }
+            if (!allows(e.categories, profile.category)) {
+                missing.push({ type: 'category', rule: e.categories });
+            }
+            if (e.max_family_income != null && profile.family_income > e.max_family_income) {
+                missing.push({ type: 'income', max: e.max_family_income });
+            }
+            if (!allows(e.genders, profile.gender)) {
+                missing.push({ type: 'gender', rule: e.genders });
+            }
+
+            if (missing.length === 0) matches.push(scheme);
+            else if (missing.length === 1) near.push({ scheme, missing: missing[0] });
+        });
+
+        return { matches, near };
+    }
+
+    // The "missing" reason is stored as data and turned into text in the current language
+    function missingText(m) {
+        switch (m.type) {
+            case 'age': return t('miss_age', { min: m.min ?? t('any'), max: m.max ?? t('any') });
+            case 'education': return t('miss_edu', { list: listLabels(m.rule, 'edu') });
+            case 'category': return t('miss_cat', { list: listLabels(m.rule, 'cat') });
+            case 'income': return t('miss_income', { max: Number(m.max).toLocaleString('en-IN') });
+            case 'gender': return t('miss_gender', { list: listLabels(m.rule, 'gender') });
+            default: return '';
+        }
+    }
+
+    // ---------- States (English or Hindi names) ----------
+    const stateLabel = (en) => (isHi() ? (I18N.STATES_HI[en] || en) : en);
+    const nf = (s) => String(s ?? '').trim().normalize('NFC').toLowerCase();
+
+    function resolveState(text) {
+        const v = nf(text);
+        if (!v) return null;
+        return statesList.find((s) => nf(s) === v || nf(I18N.STATES_HI[s]) === v) || null;
+    }
+
     function setupAutocomplete(inputId, suggestionsId, errorId) {
         const input = $(inputId);
-        const suggestionsBox = $(suggestionsId);
+        const box = $(suggestionsId);
 
-        input.addEventListener('input', function () {
+        function choose(en) {
+            input.value = stateLabel(en);
+            input.dataset.en = en;
+            setVisible(box, false);
             setFieldError(input, errorId, '');
-            const val = this.value.trim().toLowerCase();
-            suggestionsBox.innerHTML = '';
+        }
 
-            if (!val) { setVisible(suggestionsBox, false); return; }
+        input.addEventListener('input', () => {
+            delete input.dataset.en;
+            setFieldError(input, errorId, '');
+            const val = nf(input.value);
+            box.innerHTML = '';
+            if (!val) { setVisible(box, false); return; }
 
-            const starts = statesList.filter((s) => s.toLowerCase().startsWith(val));
-            const contains = statesList.filter((s) => !s.toLowerCase().startsWith(val) && s.toLowerCase().includes(val));
-            const matches = [...starts, ...contains].slice(0, 6);
-            if (matches.length === 0) { setVisible(suggestionsBox, false); return; }
+            const names = (s) => [nf(s), nf(I18N.STATES_HI[s])];
+            const starts = statesList.filter((s) => names(s).some((n) => n.startsWith(val)));
+            const contains = statesList.filter((s) => !starts.includes(s) && names(s).some((n) => n.includes(val)));
+            const found = [...starts, ...contains].slice(0, 6);
+            if (found.length === 0) { setVisible(box, false); return; }
 
-            matches.forEach((match) => {
+            found.forEach((en) => {
+                const shown = stateLabel(en);
+                const lower = shown.normalize('NFC').toLowerCase();
+                const i = lower.indexOf(val);
                 const div = document.createElement('div');
                 div.className = 'px-4 py-2 cursor-pointer hover:bg-blue-50 text-slate-700 text-sm';
-                const i = match.toLowerCase().indexOf(val);
-                div.innerHTML = escapeHtml(match.slice(0, i)) +
-                    '<strong>' + escapeHtml(match.slice(i, i + val.length)) + '</strong>' +
-                    escapeHtml(match.slice(i + val.length));
-                div.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    input.value = match;
-                    setVisible(suggestionsBox, false);
-                    setFieldError(input, errorId, '');
-                });
-                suggestionsBox.appendChild(div);
+                div.innerHTML = (i >= 0 && lower.length === shown.length)
+                    ? escapeHtml(shown.slice(0, i)) + '<strong>' + escapeHtml(shown.slice(i, i + val.length)) + '</strong>' + escapeHtml(shown.slice(i + val.length))
+                    : escapeHtml(shown);
+                div.addEventListener('mousedown', (e) => { e.preventDefault(); choose(en); });
+                box.appendChild(div);
             });
-            setVisible(suggestionsBox, true);
+            setVisible(box, true);
         });
 
         input.addEventListener('blur', () => {
-            setTimeout(() => setVisible(suggestionsBox, false), 150);
+            setTimeout(() => setVisible(box, false), 150);
             validateState(input, errorId);
         });
     }
@@ -164,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = ageInput.value.trim();
         const n = Number(val);
         if (val === '' || !Number.isInteger(n) || n < 10 || n > 60) {
-            setFieldError(ageInput, 'errorAge', 'Enter a whole number from 10 to 60');
+            setFieldError(ageInput, 'errorAge', t('err_age'));
             return false;
         }
         setFieldError(ageInput, 'errorAge', '');
@@ -175,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = incomeInput.value.trim();
         const n = Number(val);
         if (val === '' || !Number.isFinite(n) || n < 0) {
-            setFieldError(incomeInput, 'errorIncome', 'Enter a valid yearly income (0 or more)');
+            setFieldError(incomeInput, 'errorIncome', t('err_income'));
             return false;
         }
         setFieldError(incomeInput, 'errorIncome', '');
@@ -183,18 +225,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function validateState(input, errorId) {
-        const val = input.value.trim().toLowerCase();
-        if (!val) {
-            setFieldError(input, errorId, 'State is required');
+        if (!input.value.trim()) {
+            setFieldError(input, errorId, t('err_state_required'));
             return false;
         }
-        const exact = statesList.find((s) => s.toLowerCase() === val);
-        if (exact) {
-            input.value = exact;
+        const en = resolveState(input.value);
+        if (en) {
+            input.dataset.en = en;
+            input.value = stateLabel(en);
             setFieldError(input, errorId, '');
             return true;
         }
-        setFieldError(input, errorId, 'Please choose a valid Indian state or union territory from the list');
+        delete input.dataset.en;
+        setFieldError(input, errorId, t('err_state_invalid'));
         return false;
     }
 
@@ -202,16 +245,16 @@ document.addEventListener('DOMContentLoaded', () => {
     incomeInput.addEventListener('blur', validateIncome);
 
     // ---------- Result cards ----------
-    function createCard(scheme, type, missingReason = '') {
+    function createCard(scheme, type, missing) {
         const isMatch = type === 'match';
         const borderColor = isMatch ? 'border-green-200' : 'border-amber-200';
         const badgeClass = isMatch ? 'bg-green-50 text-green-700 ring-green-600/20' : 'bg-amber-50 text-amber-800 ring-amber-600/20';
 
         const levelBadge = scheme.level === 'state'
-            ? `<span class="inline-block text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">State scheme: ${escapeHtml(scheme.state_name || '')}</span>`
-            : `<span class="inline-block text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md border bg-indigo-50 text-indigo-700 border-indigo-200">Central scheme</span>`;
+            ? `<span class="inline-block text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">${escapeHtml(t('badge_state', { state: stateLabel(scheme.state_name || '') }))}</span>`
+            : `<span class="inline-block text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-md border bg-indigo-50 text-indigo-700 border-indigo-200">${escapeHtml(t('badge_central'))}</span>`;
         const unverifiedBadge = scheme.verified === false
-            ? `<span class="inline-block text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md border bg-yellow-50 text-yellow-800 border-yellow-300">Unverified - confirm on the official portal</span>`
+            ? `<span class="inline-block text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-md border bg-yellow-50 text-yellow-800 border-yellow-300">${escapeHtml(t('badge_unverified'))}</span>`
             : '';
 
         const icon = isMatch
@@ -221,16 +264,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = `
             <div class="rounded-2xl border ${borderColor} bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
                 <div class="flex items-start justify-between gap-4 mb-3">
-                    <h3 class="font-bold text-lg text-slate-900 leading-snug">${escapeHtml(scheme.name)}</h3>
+                    <h3 class="font-bold text-lg text-slate-900 leading-snug">${escapeHtml(sx(scheme, 'name'))}</h3>
                     <div class="flex-shrink-0 mt-1">${icon}</div>
                 </div>
                 <div class="flex flex-wrap gap-2 mb-3">${levelBadge}${unverifiedBadge}</div>
         `;
 
-        if (!isMatch && missingReason) {
+        if (!isMatch && missing) {
             html += `
                 <div class="mb-4 inline-flex items-center gap-1.5 rounded-lg ${badgeClass} px-3 py-1.5 text-sm font-semibold ring-1 ring-inset">
-                    <span>Missing:</span> ${escapeHtml(missingReason)}
+                    <span>${escapeHtml(t('lbl_missing'))}</span> ${escapeHtml(missingText(missing))}
                 </div>
             `;
         }
@@ -238,28 +281,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (scheme.deadline) {
             html += `<p class="text-sm text-red-600 font-bold mb-3 flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Deadline: ${escapeHtml(scheme.deadline)}
+                ${escapeHtml(t('lbl_deadline', { date: fmtDate(scheme.deadline) }))}
             </p>`;
         }
 
-        html += `<p class="text-slate-600 text-sm mb-4 leading-relaxed">${escapeHtml(scheme.description)}</p>`;
+        html += `<p class="text-slate-600 text-sm mb-4 leading-relaxed">${escapeHtml(sx(scheme, 'description'))}</p>`;
 
         html += `<div class="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-100">
-                    <p class="text-sm"><strong class="text-slate-900">Benefit:</strong> <span class="text-slate-700">${escapeHtml(scheme.benefit_text)}</span></p>
+                    <p class="text-sm"><strong class="text-slate-900">${escapeHtml(t('lbl_benefit'))}</strong> <span class="text-slate-700">${escapeHtml(sx(scheme, 'benefit_text'))}</span></p>
                  </div>`;
 
         if (scheme.check_also) {
             html += `
                 <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                    <p class="text-sm text-blue-900"><strong class="font-semibold">Important Rule:</strong> ${escapeHtml(scheme.check_also)}</p>
+                    <p class="text-sm text-blue-900"><strong class="font-semibold">${escapeHtml(t('lbl_rule'))}</strong> ${escapeHtml(sx(scheme, 'check_also'))}</p>
                 </div>
             `;
         }
 
-        if (scheme.documents_needed && scheme.documents_needed.length > 0) {
-            const docs = scheme.documents_needed.map((d) => `<span class="inline-block bg-white text-slate-600 text-xs font-semibold px-3 py-1 rounded-full border border-slate-200 mb-2 mr-2 shadow-sm">${escapeHtml(d)}</span>`).join('');
+        const docList = sx(scheme, 'documents_needed');
+        if (docList && docList.length > 0) {
+            const docs = docList.map((d) => `<span class="inline-block bg-white text-slate-600 text-xs font-semibold px-3 py-1 rounded-full border border-slate-200 mb-2 mr-2 shadow-sm">${escapeHtml(d)}</span>`).join('');
             html += `<div class="mb-4">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Documents Needed</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">${escapeHtml(t('lbl_docs'))}</p>
                         <div class="flex flex-wrap">${docs}</div>
                      </div>`;
         }
@@ -269,21 +313,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const pdfLink = isUrl(scheme.source_url)
             ? `<a href="${escapeHtml(scheme.source_url)}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 text-sm font-medium underline flex items-center gap-1 mt-2">
                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                 Official Guidelines (PDF)
+                 ${escapeHtml(t('lnk_pdf'))}
                </a>`
             : '';
 
         const applyUrl = isUrl(scheme.apply_url) ? scheme.apply_url : (isUrl(scheme.source_url) ? scheme.source_url : '');
         const applyBtn = applyUrl
             ? `<a href="${escapeHtml(applyUrl)}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto text-center bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-2.5 px-6 rounded-xl transition-colors whitespace-nowrap shadow-sm">
-                    View & Apply
+                    ${escapeHtml(t('btn_apply'))}
                </a>`
             : '';
 
         html += `
                 <div class="border-t border-slate-100 pt-5 mt-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
                     <div class="w-full sm:w-auto">
-                        <p class="text-xs text-slate-500 leading-relaxed"><strong class="text-slate-700 uppercase tracking-wider">How to apply:</strong><br>${escapeHtml(scheme.how_to_apply)}</p>
+                        <p class="text-xs text-slate-500 leading-relaxed"><strong class="text-slate-700 tracking-wider">${escapeHtml(t('lbl_how'))}</strong><br>${escapeHtml(sx(scheme, 'how_to_apply'))}</p>
                         ${pdfLink}
                     </div>
                     ${applyBtn}
@@ -293,23 +337,73 @@ document.addEventListener('DOMContentLoaded', () => {
         return html;
     }
 
-    // ---------- Mandana's take (pre-generated) ----------
+    // ---------- Mandana's take (pre-generated; optional *_hi fields for Hindi) ----------
     function renderMandana(matches) {
         setVisible(mandanaPanel, false);
-        // Look up by central schemes only, so one entry works for every state
-        const central = matches.filter((m) => m.level === 'central');
-        if (!mandanaPanel || central.length < 2) return;
-        const key = central.map((m) => m.id).sort().join('+');
-        const t = mandanaTakes[key];
-        if (!t || t.ready !== true) return;
-        $('mandanaMeta').textContent = 'Pre-generated with Mandana AI (KriyagniAI) on ' + (t.generated_on || '') + ' for: ' + (t.profile_note || '');
-        $('mandanaLean').textContent = t.lean || '';
-        $('mandanaTension').textContent = t.tension || '';
-        $('mandanaTake').textContent = t.take || '';
-        $('mandanaAsk').textContent = t.ask || '';
-        $('mandanaConfidence').textContent = t.confidence || '';
+        if (!mandanaPanel || matches.length < 2) return;
+        const key = matches.map((m) => m.id).sort().join('+');
+        const take = mandanaTakes[key];
+        if (!take || take.ready !== true) return;
+        const pick = (f) => (isHi() && take[f + '_hi']) || take[f] || '';
+        $('mandanaMeta').textContent = t('m_meta', { date: take.generated_on || '', profile: take.profile_note || '' });
+        $('mandanaLean').textContent = pick('lean');
+        $('mandanaTension').textContent = pick('tension');
+        $('mandanaTake').textContent = pick('take');
+        $('mandanaAsk').textContent = pick('ask');
+        $('mandanaConfidence').textContent = pick('confidence');
         setVisible(mandanaPanel, true);
     }
+
+    // ---------- Render results (also re-run when the language changes) ----------
+    function renderResults() {
+        if (!lastResult) return;
+        const { matches, near } = lastResult;
+
+        setVisible(initialState, false);
+        setVisible(resultsContainer, true);
+
+        matchCount.textContent = matches.length;
+        nearCount.textContent = near.length;
+
+        if (matches.length > 0) {
+            matchesBox.innerHTML = matches.map((m) => createCard(m, 'match')).join('');
+            setVisible(noMatchesMsg, false);
+        } else {
+            matchesBox.innerHTML = '';
+            setVisible(noMatchesMsg, true);
+        }
+
+        if (near.length > 0) {
+            nearBox.innerHTML = near.map((n) => createCard(n.scheme, 'near', n.missing)).join('');
+            setVisible(noNearMsg, false);
+        } else {
+            nearBox.innerHTML = '';
+            setVisible(noNearMsg, true);
+        }
+
+        renderMandana(matches);
+    }
+
+    // ---------- Language toggle ----------
+    $('langToggle').addEventListener('click', () => {
+        I18N.setLang(isHi() ? 'en' : 'hi');
+
+        // Show state names in the new language
+        [domicileInput, collegeInput].forEach((inp) => {
+            if (inp.dataset.en) inp.value = stateLabel(inp.dataset.en);
+        });
+
+        // Clear messages written in the old language
+        ['errorAge', 'errorIncome', 'errorDomicile', 'errorCollege'].forEach((id) => {
+            const el = $(id);
+            el.textContent = '';
+            setVisible(el, false);
+        });
+        [ageInput, incomeInput, domicileInput, collegeInput].forEach((inp) => inp.classList.remove('border-red-500', 'ring-red-500'));
+        setVisible(formError, false);
+
+        renderResults();
+    });
 
     // ---------- Submit ----------
     form.addEventListener('submit', async (e) => {
@@ -325,8 +419,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = {
             age: Number(ageInput.value),
             family_income: Number(incomeInput.value),
-            domicile_state: domicileInput.value.trim(),
-            college_state: collegeInput.value.trim(),
+            domicile_state: domicileInput.dataset.en,
+            college_state: collegeInput.dataset.en,
             education_level: $('education_level').value,
             category: $('category').value,
             gender: $('gender').value
@@ -337,46 +431,24 @@ document.addEventListener('DOMContentLoaded', () => {
         setVisible(formError, false);
 
         try {
-                if (schemesList.length === 0) {
-                formError.textContent = 'Scheme data is still loading. Please try again in a moment.';
+            if (schemesList.length === 0) {
+                formError.textContent = t('err_loading');
                 setVisible(formError, true);
                 return;
             }
             const data = matchSchemes(payload);
-
-            setVisible(initialState, false);
-            setVisible(resultsContainer, true);
-
-            const matches = data.matches || [];
-            const near = data.near_misses || [];
-
-            matchCount.textContent = matches.length;
-            nearCount.textContent = near.length;
-
-            if (matches.length > 0) {
-                matchesBox.innerHTML = matches.map((m) => createCard(m, 'match')).join('');
-                setVisible(noMatchesMsg, false);
-            } else {
-                matchesBox.innerHTML = '';
-                setVisible(noMatchesMsg, true);
-            }
-
-            if (near.length > 0) {
-                nearBox.innerHTML = near.map((n) => createCard(n.scheme, 'near', n.missing)).join('');
-                setVisible(noNearMsg, false);
-            } else {
-                nearBox.innerHTML = '';
-                setVisible(noNearMsg, true);
-            }
-
-            renderMandana(matches);
+            lastResult = { matches: data.matches, near: data.near };
+            renderResults();
         } catch (err) {
             console.error(err);
-            formError.textContent = 'Failed to connect to the server. Make sure the server is running (node server.js).';
+            formError.textContent = t('err_generic');
             setVisible(formError, true);
         } finally {
             submitBtn.disabled = false;
             spinner.classList.add('hidden');
         }
     });
+
+    // Apply the saved language to the static page text
+    I18N.applyStatic();
 });
