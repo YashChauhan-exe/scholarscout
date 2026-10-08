@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>How It Works | ScholarScout</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <script src="theme.js"></script>
     <style>
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -26,9 +28,15 @@
                         S
                     </div>
                     <span class="font-bold text-xl tracking-tight text-slate-900">ScholarScout</span>
+                    <span class="hidden md:inline-block border-l border-slate-300 pl-3 text-sm lg:text-base font-semibold text-slate-700">Privacy-first, scholarship-fast.</span>
                 </a>
                 <div class="flex items-center space-x-6">
                     <a href="/" class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">← Back to Finder</a>
+                    <button type="button" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode" aria-pressed="false"
+                        class="border border-slate-300 rounded-lg p-2 text-slate-700 hover:bg-slate-100 transition-colors">
+                        <svg class="theme-icon-moon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        <svg class="theme-icon-sun w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -71,7 +79,7 @@
                         </li>
                         <li class="flex items-start gap-2">
                             <svg class="w-5 h-5 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span><strong>Hosting:</strong> Netlify (free tier) with automatic deployment from GitHub.</span>
+                            <span><strong>Hosting:</strong> Azure Static Web Apps (free tier) with automatic deployment from GitHub.</span>
                         </li>
                     </ul>
                 </div>
@@ -108,7 +116,7 @@
                     The Matching Engine
                 </h2>
                 <p class="text-slate-300 leading-relaxed mb-8">
-                    Our matching engine iterates through the standardized <code>schemes.json</code> database. We use a count-based logic gate to determine if a student perfectly qualifies, or if they are one step away from a major financial grant.
+                    Our backend iterates through the standardized <code>schemes.json</code> database. We use a count-based logic gate to determine if a student perfectly qualifies, or if they are one step away from a major financial grant.
                 </p>
 
                 <!-- Tailwind Flowchart -->
